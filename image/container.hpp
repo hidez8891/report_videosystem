@@ -2,6 +2,7 @@
 #define _IMAGE_CONTAINER_
 
 #include <vector>
+#include <cassert>
 
 namespace Image
 {
@@ -52,15 +53,15 @@ namespace Image
 		inline
 		const T& operator() (unsigned int x, unsigned int y) const
 		{
-			assert(x < width && y < height);
-			return _image(x + width * y);
+			assert(x < _width && y < _height);
+			return _image[x + width * y];
 		}
 
 		inline
 		T& operator() (unsigned int x, unsigned int y)
 		{
-			assert(x < width && y < height);
-			return _image(x + width * y);
+			assert(x < _width && y < _height);
+			return _image[x + _width * y];
 		}
 
 		template <typename P>

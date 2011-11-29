@@ -4,12 +4,15 @@ int main(void)
 {
 	//オプションいる？
 
+	const int width = 300;
+	const int height = 300;
+
 	//初期画像の読み込み
-	auto premap = Image::load<float>(filename);
+	auto premap = Image::load<float>(filename, width, height);
 
 	for (int id = headframe + skipframe; id <= tailframe; id += skipframe) {
 		//対象画像の読み込み
-		auto crtmap = Image::load<float>(filename);
+		auto crtmap = Image::load<float>(filename, width, height);
 
 		//動きベクトル予測
 		auto vec = Image::full_search(premap, crtmap);

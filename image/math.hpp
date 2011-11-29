@@ -6,9 +6,16 @@
 
 namespace std
 {
-	Image::container pow(const Image::container& a, double b)
+	template <typename T>
+	Image::container<T> pow(const Image::container<T>& a, double b)
 	{
-		return a.apply( [b](container::value_type a) { return pow(a, b); } );
+		return a.apply([b](T c) { return pow(c, b); });
+	}
+
+	template <typename T>
+	Image::container<T> abs(const Image::container<T>& a)
+	{
+		return a.apply([](T c) { return abs(c); });
 	}
 }
 

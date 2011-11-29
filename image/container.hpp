@@ -20,6 +20,8 @@ namespace Image
 
 	public:
 		typedef T value_type;
+		typedef typename ContainerType::iterator iterator;
+		typedef typename ContainerType::const_iterator const_iterator;
 
 		container()
 			: _width(0), _height(0), _image()
@@ -66,7 +68,7 @@ namespace Image
 
 		template <typename P>
 		inline
-		container apply(P func)
+		container apply(P func) const
 		{
 			auto tmp = *this;
 
@@ -80,11 +82,11 @@ namespace Image
 		inline
 		container operator+ (const container &obj) const
 		{
-			assert(width == obj.width() && height == obj.height());
+			assert(_width == obj.width() && _height == obj.height());
 
 			auto tmp = *this;
 			auto it = tmp._image.begin();
-			const auto cit = obj._image.begin();
+			auto cit = obj._image.begin();
 
 			for ( ; it != tmp._image.end(); ++it, ++cit) {
 				*it += *cit;
@@ -96,11 +98,11 @@ namespace Image
 		inline
 		container operator- (const container &obj) const
 		{
-			assert(width == obj.width() && height == obj.height());
+			assert(_width == obj.width() && _height == obj.height());
 
 			auto tmp = *this;
 			auto it = tmp._image.begin();
-			const auto cit = obj._image.begin();
+			auto cit = obj._image.begin();
 
 			for ( ; it != tmp._image.end(); ++it, ++cit) {
 				*it -= *cit;

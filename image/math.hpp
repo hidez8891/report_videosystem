@@ -4,7 +4,6 @@
 #include "container.hpp"
 #include <cmath>
 
-
 namespace std
 {
 	template <typename T>
@@ -22,11 +21,12 @@ namespace std
 	template <typename T>
 	double sum(const Image::container<T>& a)
 	{
+		typedef typename Image::container<T>::const_iterator cit;
 		double d = 0;
 
-		std::for_each(a.begin(), a.end(), [&d](const float &i) {
-			d += i;
-		});
+		for (cit it = a.begin(); it != a.end(); ++it) {
+			d += *it;
+		}
 
 		return d;
 	}

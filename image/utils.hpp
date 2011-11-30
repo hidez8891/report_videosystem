@@ -10,8 +10,7 @@ namespace Image
 	container<T> prediction(
 		const container<T> &premap,
 		const container<std::pair<E1,E2>> &vec,
-		const unsigned int macro_brock_width,
-		const unsigned int macro_brock_height
+		const unsigned int macro_brock_size
 	) {
 		container<T> mcmap(premap.width(), premap.height());
 
@@ -20,12 +19,12 @@ namespace Image
 			for (int cx = 0; cx < vec.width(); ++cx) {
 				E1 dx = vec(cx, cy).first;
 				E2 dy = vec(cx, cy).second;
-				int x = cx * macro_brock_width;
-				int y = cy * macro_brock_height;
+				int x = cx * macro_brock_size;
+				int y = cy * macro_brock_size;
 
 				std::copy(
 					premap, x+dx, y+dy,
-					macro_brock_width, macro_brock_height,
+					macro_brock_size, macro_brock_size,
 					mcmap, x, y
 				);
 			}

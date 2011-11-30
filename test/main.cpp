@@ -7,6 +7,7 @@
 #include "../image/io.hpp"
 #include "../image/math.hpp"
 #include "../image/utils.hpp"
+#include "../image/argorithm.hpp"
 
 using namespace Image;
 using namespace std;
@@ -151,8 +152,23 @@ BOOST_AUTO_TEST_CASE(utils_prediction)
 	vector<pair<int,int>> p = {{2, 2}, {-2, 2}, {2, -2}, {-2, -2}};
 	container<pair<int,int>> pp(2, 2, p.begin(), p.end());
 
-	auto e = prediction(c, pp, 2, 2);
+	auto e = prediction(c, pp, 2);
 
 	BOOST_CHECK(d == e);
+}
+
+BOOST_AUTO_TEST_CASE(algorithm_full_search)
+{
+	vector<char> a = {1,1,2,2,1,1,2,2,3,3,4,4,3,3,4,4};
+	vector<char> b = {4,4,3,3,4,4,3,3,2,2,1,1,2,2,1,1};
+	container<float> c(4, 4, a.begin(), a.end());
+	container<float> d(4, 4, b.begin(), b.end());
+
+	vector<pair<int,int>> p = {{2, 2}, {-2, 2}, {2, -2}, {-2, -2}};
+	container<pair<int,int>> pp(2, 2, p.begin(), p.end());
+
+	auto e = full_search(c, d, 2, 2);
+
+	BOOST_CHECK(pp == e);
 }
 

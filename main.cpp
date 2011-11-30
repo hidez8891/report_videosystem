@@ -21,7 +21,7 @@ int main(void)
 		auto mcmap = Image::prediction(premap, vec);
 
 		//PSNRを計算
-		double psnr = pow(mcmap - crtmap, 2.0) / (crtmap.width() * crtmap.height());
+		double psnr = sum(pow(mcmap - crtmap, 2.0)) / (crtmap.width() * crtmap.height());
 
 		//元画像 ←  対象画像
 		premap = std::move(crtmap);

@@ -53,10 +53,16 @@ namespace Image
 		}
 
 		inline
+		bool operator== (const container &obj) const
+		{
+			return _image == obj._image;
+		}
+
+		inline
 		const T& operator() (unsigned int x, unsigned int y) const
 		{
 			assert(x < _width && y < _height);
-			return _image[x + width * y];
+			return _image[x + _width * y];
 		}
 
 		inline
@@ -64,19 +70,6 @@ namespace Image
 		{
 			assert(x < _width && y < _height);
 			return _image[x + _width * y];
-		}
-
-		template <typename P>
-		inline
-		container apply(P func) const
-		{
-			auto tmp = *this;
-
-			for (auto it = tmp._image.begin() ; it != tmp._image.end(); ++it) {
-				*it = func(*it);
-			}
-
-			return tmp;
 		}
 
 		inline
@@ -122,8 +115,60 @@ namespace Image
 		{
 			return _image.end();
 		}
+
+		template <typename P>
+		inline
+		container apply(P func) const
+		{
+			auto tmp = *this;
+
+			for (auto it = tmp._image.begin() ; it != tmp._image.end(); ++it) {
+				*it = func(*it);
+			}
+
+			return tmp;
+		}
+
+		template <typename T1, typename T2>
+		friend 
+		Image::container<T2>& std::copy (
+			const Image::container<T1> &src,
+			unsigned int sx, unsigned int sy,
+			unsigned int sw, unsigned int sh,
+			Image::container<T2> &dst,
+			unsigned int dx, unsigned int dy
+		);
+
 	};
 };
 
+namespace std
+{
+	template <typename T1, typename T2>
+	inline
+	Image::container<T2>& copy (
+		const Image::container<T1> &src,
+		unsigned int sx, unsigned int sy,
+		unsigned int sw, unsigned int sh,
+		Image::container<T2> &dst,
+		unsigned int dx, unsigned int dy
+	) {
+		assert(sx + sw <= src._width && sy + sh <= src._height);
+		assert(dx + sw <= dst._width && dy + sh <= dst._height);
+
+		int sp = sx + sy * src._width;
+		int dp = dx + dy * dst._width;
+
+		for (int i = 0; i < sh; ++i) {
+			std::copy(
+				src._image.begin() + sp+i*src._width,
+				src._image.begin() + sp+i*src._width + sw,
+				dst._image.begin() + dp+i*dst._width
+			);
+		}
+
+		return dst;
+	}
+}
 #endif
 

@@ -6,6 +6,7 @@
 #include "../image/container.hpp"
 #include "../image/io.hpp"
 #include "../image/math.hpp"
+#include "../image/utils.hpp"
 
 using namespace Image;
 using namespace std;
@@ -138,5 +139,20 @@ BOOST_AUTO_TEST_CASE(math_sum)
 
 	double d = sum(c);
 	BOOST_CHECK_EQUAL(d, 10.0);
+}
+
+BOOST_AUTO_TEST_CASE(utils_prediction)
+{
+	vector<char> a = {1,1,2,2,1,1,2,2,3,3,4,4,3,3,4,4};
+	vector<char> b = {4,4,3,3,4,4,3,3,2,2,1,1,2,2,1,1};
+	container<float> c(4, 4, a.begin(), a.end());
+	container<float> d(4, 4, b.begin(), b.end());
+
+	vector<pair<int,int>> p = {{2, 2}, {-2, 2}, {2, -2}, {-2, -2}};
+	container<pair<int,int>> pp(2, 2, p.begin(), p.end());
+
+	auto e = prediction(c, pp, 2, 2);
+
+	BOOST_CHECK(d == e);
 }
 

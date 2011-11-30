@@ -1,6 +1,8 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/included/unit_test.hpp>
 
+#include <algorithm>
+
 #include "../image/container.hpp"
 #include "../image/io.hpp"
 #include "../image/math.hpp"
@@ -59,6 +61,19 @@ BOOST_AUTO_TEST_CASE(container_applys)
 	BOOST_CHECK_EQUAL(e(1,1), 6.0);
 }
 
+BOOST_AUTO_TEST_CASE(container_const_iterator)
+{
+	vector<char> a = {1, 2, 3, 4};
+	container<float> c(2, 2, a.begin(), a.end());
+	double d = 0;
+
+	std::for_each(c.begin(), c.end(), [&d](const float &i) {
+		d += i;
+	});
+
+	BOOST_CHECK_EQUAL(d, 10.0);
+}
+
 BOOST_AUTO_TEST_CASE(image_load_throw_file_open_exception)
 {
 	BOOST_CHECK_THROW(
@@ -114,5 +129,14 @@ BOOST_AUTO_TEST_CASE(math_abs)
 	BOOST_CHECK_EQUAL(e(1,0), 2.0);
 	BOOST_CHECK_EQUAL(e(0,1), 3.0);
 	BOOST_CHECK_EQUAL(e(1,1), 4.0);
+}
+
+BOOST_AUTO_TEST_CASE(math_sum)
+{
+	vector<char> a = {1, 2, 3, 4};
+	container<float> c(2, 2, a.begin(), a.end());
+
+	double d = sum(c);
+	BOOST_CHECK_EQUAL(d, 10.0);
 }
 

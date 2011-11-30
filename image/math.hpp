@@ -4,6 +4,7 @@
 #include "container.hpp"
 #include <cmath>
 
+
 namespace std
 {
 	template <typename T>
@@ -16,6 +17,18 @@ namespace std
 	Image::container<T> abs(const Image::container<T>& a)
 	{
 		return a.apply([](T c) { return abs(c); });
+	}
+
+	template <typename T>
+	double sum(const Image::container<T>& a)
+	{
+		double d = 0;
+
+		std::for_each(a.begin(), a.end(), [&d](const float &i) {
+			d += i;
+		});
+
+		return d;
 	}
 }
 

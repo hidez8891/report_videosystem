@@ -111,6 +111,17 @@ namespace Image
 			return tmp;
 		}
 
+		inline
+		const_iterator begin() const
+		{
+			return _image.begin();
+		}
+
+		inline
+		const_iterator end() const
+		{
+			return _image.end();
+		}
 	};
 };
 

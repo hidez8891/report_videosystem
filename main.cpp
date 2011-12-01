@@ -36,7 +36,7 @@ int main(void)
 	const int headframe = 2;
 	const int skipframe = 3;
 	const int tailframe = 23;
-	//const int tailframe = 5;
+	// const int tailframe = 5;
 
 	//設定: 出力設定
 	std::cout.precision(6);
@@ -57,7 +57,8 @@ int main(void)
 
 		//動きベクトル予測
 		// auto vec = Image::full_search(premap, crtmap, brock_size, search_size);
-		auto vec = Image::three_step_search(premap, crtmap, brock_size, search_size);
+		// auto vec = Image::three_step_search(premap, crtmap, brock_size, search_size);
+		auto vec = Image::diamond_search(premap, crtmap, brock_size, search_size);
 
 		//予測画像の作成
 		auto mcmap = Image::prediction(premap, vec, brock_size);

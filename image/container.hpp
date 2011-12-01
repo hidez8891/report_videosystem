@@ -22,6 +22,8 @@ namespace Image
 		typedef T value_type;
 		typedef typename ContainerType::iterator iterator;
 		typedef typename ContainerType::const_iterator const_iterator;
+		typedef typename ContainerType::reference reference;
+		typedef typename ContainerType::const_reference const_reference;
 
 		container()
 			: _width(0), _height(0), _image()
@@ -59,14 +61,16 @@ namespace Image
 		}
 
 		inline
-		const T& operator() (unsigned int x, unsigned int y) const
+		const_reference
+		operator() (unsigned int x, unsigned int y) const
 		{
 			assert(x < _width && y < _height);
 			return _image[x + _width * y];
 		}
 
 		inline
-		T& operator() (unsigned int x, unsigned int y)
+		reference
+		operator() (unsigned int x, unsigned int y)
 		{
 			assert(x < _width && y < _height);
 			return _image[x + _width * y];
@@ -75,7 +79,7 @@ namespace Image
 		inline
 		container operator+ (const container &obj) const
 		{
-			assert(_width == obj.width() && _height == obj.height());
+			assert(_width == obj._width && _height == obj._height);
 
 			auto tmp = *this;
 			auto it = tmp._image.begin();
@@ -91,7 +95,7 @@ namespace Image
 		inline
 		container operator- (const container &obj) const
 		{
-			assert(_width == obj.width() && _height == obj.height());
+			assert(_width == obj._width && _height == obj._height);
 
 			auto tmp = *this;
 			auto it = tmp._image.begin();

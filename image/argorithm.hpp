@@ -131,12 +131,15 @@ namespace Image
 		return ve;
 	}
 
-	template <typename T>
-	container<std::pair<int, int>> diamond_search (
+	template <typename T, typename E>
+	container<std::pair<int, int>>
+	_shape_based_search (
 		const container<T> &premap,
 		const container<T> &crtmap,
 		unsigned int macro_brock_size,
-		unsigned int search_size
+		unsigned int search_size,
+		const std::vector<std::pair<E, E>> &ldsp,
+		const std::vector<std::pair<E, E>> &sdsp
 	) {
 		container<std::pair<int, int>> ve(
 			premap.width()/macro_brock_size,
@@ -157,14 +160,6 @@ namespace Image
 					macro_brock_size*2+1
 				);
 
-				std::vector<std::pair<int, int>> ldsp = {
-					{-2, 0}, {-1, 1}, { 0, 2}, { 1, 1},
-					{ 2, 0}, { 1,-1}, { 0,-2}, {-1,-1}
-				};
-				std::vector<std::pair<int, int>> sdsp = {
-					{-1, 0}, { 0, 1}, { 1, 0}, { 0,-1}
-				};
-
 				//中心点の誤差計算
 				double sad = 0;
 				for (int iy=0; iy<macro_brock_size; ++iy) {
@@ -174,7 +169,7 @@ namespace Image
 				}
 				is_searched(macro_brock_size, macro_brock_size) = true;
 
-				//ダイアモンド(|x|+|y|==2)上を移動して検索
+				//LDSP上を移動して検索
 				while (true) {
 					for (auto i = ldsp.begin(); i != ldsp.end(); ++i) {
 						int dx = i->first;
@@ -216,15 +211,16 @@ namespace Image
 					}
 				}
 
-				//近接4点の比較からベクトル抽出
+				//SDSP上からベクトル抽出
 				for (auto i = sdsp.begin(); i != sdsp.end(); ++i) {
 					int dx = i->first;
 					int dy = i->second;
 
-					//画像端は処理対象外
+					//画像端と処理済みは処理対象外
 					if ((y+py+dy < 0) || (x+px+dx < 0) ||
 						(y+py+dy+macro_brock_size > premap.height()) ||
-						(x+px+dx+macro_brock_size > premap.width())
+						(x+px+dx+macro_brock_size > premap.width()) ||
+						is_searched(px+dx+macro_brock_size, py+dy+macro_brock_size)
 					) {
 						continue;
 					}
@@ -248,6 +244,71 @@ namespace Image
 		}
 
 		return ve;
+	}
+
+	template <typename T>
+	container<std::pair<int, int>> diamond_search (
+		const container<T> &premap,
+		const container<T> &crtmap,
+		unsigned int macro_brock_size,
+		unsigned int search_size
+	) {
+		std::vector<std::pair<int, int>> ldsp = {
+			{-2, 0}, {-1, 1}, { 0, 2}, { 1, 1},
+			{ 2, 0}, { 1,-1}, { 0,-2}, {-1,-1}
+		};
+		std::vector<std::pair<int, int>> sdsp = {
+			{-1, 0}, { 0, 1}, { 1, 0}, { 0,-1}
+		};
+
+		return _shape_based_search(
+			premap, crtmap,
+			macro_brock_size, search_size,
+			ldsp, sdsp
+		);
+	}
+
+	template <typename T>
+	container<std::pair<int, int>> hexagon_search (
+		const container<T> &premap,
+		const container<T> &crtmap,
+		unsigned int macro_brock_size,
+		unsigned int search_size
+	) {
+		std::vector<std::pair<int, int>> ldsp = {
+			{-2, 0}, {-1, 2}, { 1, 2},
+			{ 2, 0}, { 1,-2}, {-1,-2},
+		};
+		std::vector<std::pair<int, int>> sdsp = {
+			{-1, 0}, { 0, 1}, { 1, 0}, { 0,-1}
+		};
+
+		return _shape_based_search(
+			premap, crtmap,
+			macro_brock_size, search_size,
+			ldsp, sdsp
+		);
+	}
+
+	template <typename T>
+	container<std::pair<int, int>> greedy_search (
+		const container<T> &premap,
+		const container<T> &crtmap,
+		unsigned int macro_brock_size,
+		unsigned int search_size
+	) {
+		std::vector<std::pair<int, int>> ldsp = {
+			{-1,-1}, { 0,-1}, { 1,-1},
+			{-1, 0}, { 0, 0}, { 1, 0},
+			{-1, 1}, { 0, 1}, { 1, 1}
+		};
+		std::vector<std::pair<int, int>> sdsp = {};
+
+		return _shape_based_search(
+			premap, crtmap,
+			macro_brock_size, search_size,
+			ldsp, sdsp
+		);
 	}
 }
 

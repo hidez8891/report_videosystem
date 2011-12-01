@@ -9,7 +9,7 @@
 #include "image/io.hpp"
 #include "image/math.hpp"
 #include "image/utils.hpp"
-#include "image/argorithm.hpp"
+#include "image/algorithm.hpp"
 
 const std::string itos(const int num, const int width, const char fill)
 {
@@ -23,7 +23,7 @@ int main(void)
 	//オプションいる？
 
 	//設定: 動き保証のパラメータ
-	const int brock_size  = 16;
+	const int block_size  = 16;
 	const int search_size = 7;
 
 	//設定: 対象画像サイズ
@@ -56,14 +56,17 @@ int main(void)
 		auto crtmap = Image::load<float>(filename, width, height);
 
 		//動きベクトル予測
-		// auto vec = Image::full_search(premap, crtmap, brock_size, search_size);
-		// auto vec = Image::three_step_search(premap, crtmap, brock_size, search_size);
-		// auto vec = Image::diamond_search(premap, crtmap, brock_size, search_size);
-		// auto vec = Image::hexagon_search(premap, crtmap, brock_size, search_size);
-		auto vec = Image::greedy_search(premap, crtmap, brock_size, search_size);
+		// auto func = Image::search::full();
+		// auto func = Image::search::three_step();
+		// auto func = Image::search::greedy();
+		// auto func = Image::search::diamond();
+		auto func = Image::search::hexagon();
+		auto vec = Image::motion_vector_search(
+		   premap, crtmap, block_size, search_size, func
+		);
 
 		//予測画像の作成
-		auto mcmap = Image::prediction(premap, vec, brock_size);
+		auto mcmap = Image::prediction(premap, vec, block_size);
 
 		//PSNRを計算
 		double mse = sum(pow(mcmap - crtmap, 2.0)) / (crtmap.width() * crtmap.height());

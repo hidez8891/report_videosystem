@@ -9,30 +9,44 @@
 
 namespace Image
 {
+	/**
+	 * 例外クラス ファイルオープン失敗
+	 */
 	class file_open_exception : public std::ios::failure
 	{
 	public:
-		file_open_exception(const std::string &cause)
+		file_open_exception (const std::string &cause)
 			: std::ios::failure(cause)
 		{
 		}
 	};
 
+	/**
+	 * 例外クラス ファイル読み込み失敗
+	 */
 	class file_read_exception : public std::ios::failure
 	{
 	public:
-		file_read_exception(const std::string &cause)
+		file_read_exception (const std::string &cause)
 			: std::ios::failure(cause)
 		{
 		}
 	};
 
+	/**
+	 * ファイルの読み込み
+	 *
+	 * @param filename 読み込みファイル
+	 * @param width 読み込みデータの横幅
+	 * @param height 読み込みデータの縦幅
+	 * @return 読み込んだデータのコンテナ
+	 */
 	template <typename T, typename InnerType = unsigned char>
-	container<T> load(
+	container<T> load (
 		const std::string &filename,
 		const unsigned int width,
-		const unsigned int height
-	){
+		const unsigned int height )
+	{
 		//読み込みファイルのオープン
 		std::ifstream in(filename.c_str(), std::ios::binary);
 		if (in.fail()) {
@@ -61,4 +75,4 @@ namespace Image
 }
 
 #endif
-
+/* vim: set ts=2 sw=2 sts=2 noexpandtab ff=unix ft=cpp fenc=utf-8 : */

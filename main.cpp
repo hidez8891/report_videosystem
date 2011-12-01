@@ -11,13 +11,24 @@
 #include "image/utils.hpp"
 #include "image/algorithm.hpp"
 
-const std::string itos(const int num, const int width, const char fill)
+/**
+ * 整数を文字列化
+ *
+ * @param num 整数
+ * @param width 最小文字幅
+ * @param fill 文字幅に満たない場合に埋める文字
+ * @return 整数の文字列
+ */
+const std::string itos (const int num, const int width, const char fill)
 {
 	std::stringstream str;
 	str << std::setw(width) << std::setfill(fill) << num;
 	return str.str();
 }
 
+/**
+ * main関数
+ */
 int main(void)
 {
 	//オプションいる？
@@ -36,7 +47,6 @@ int main(void)
 	const int headframe = 2;
 	const int skipframe = 3;
 	const int tailframe = 23;
-	// const int tailframe = 5;
 
 	//設定: 出力設定
 	std::cout.precision(6);
@@ -78,5 +88,8 @@ int main(void)
 		//元画像 ←  対象画像
 		premap = std::move(crtmap);
 	}
+
+	return 0;
 }
 
+/* vim: set ts=2 sw=2 sts=2 noexpandtab ff=unix ft=cpp fenc=utf-8 : */

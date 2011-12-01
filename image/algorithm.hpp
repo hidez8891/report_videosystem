@@ -8,6 +8,9 @@
 
 namespace Image 
 {
+	typedef std::pair<int, int> ve_pair;
+	typedef container<ve_pair>  ve_container;
+
 	/**
 	 * 動きベクトル検出
 	 *
@@ -19,27 +22,26 @@ namespace Image
 	 * @return マクロブロックの動きベクトルのコンテナ
 	 */
 	template <typename T, typename Function>
-	container<std::pair<int, int>>
-	motion_vector_search (
+	ve_container motion_vector_search (
 		const container<T> &premap,
 		const container<T> &crtmap,
-		unsigned int macro_block_size,
-		unsigned int search_size,
-		const Function &func
-	) {
-		container<std::pair<int, int>> ve (
-			premap.width()/macro_block_size,
-			premap.height()/macro_block_size
-		);
+		const unsigned int macro_block_size,
+		const unsigned int search_size,
+		const Function &func )
+	{
+		ve_container ve (
+			premap.width()  / macro_block_size,
+			premap.height() / macro_block_size );
 
 		//探索開始点
-		for (int my=0; my*macro_block_size < premap.height(); ++my) {
-			for (int mx=0; mx*macro_block_size < premap.width(); ++mx) {
+		for (int my=0; my * macro_block_size < premap.height(); ++my) {
+			for (int mx=0; mx * macro_block_size < premap.width(); ++mx) {
 				//探索
 				double sad = std::numeric_limits<double>::max();
 				int x = mx * macro_block_size;
 				int y = my * macro_block_size;
 
+				//動きベクトル取得
 				ve(mx, my) = func(premap, crtmap, x, y, macro_block_size, search_size);
 			}
 		}
@@ -48,7 +50,8 @@ namespace Image
 	}
 
 
-	namespace search {
+	namespace search
+	{
 		/**
 		 * 検出アルゴリズム ベースクラス
 		 */
@@ -65,18 +68,15 @@ namespace Image
 			 */
 			template <typename T>
 			inline
-			bool
-			is_over_edge (
+			bool is_over_edge (
 				const container<T> &imgmap,
-				int x,
-				int y,
-				unsigned int macro_block_size
-			) const {
+				const int x, const int y,
+				const unsigned int macro_block_size ) const
+			{
 				return (
 					(y < 0) || (x < 0) ||
 					(y+macro_block_size > imgmap.height()) ||
-					(x+macro_block_size > imgmap.width())
-				);
+					(x+macro_block_size > imgmap.width()) );
 			}
 
 			/**
@@ -93,14 +93,11 @@ namespace Image
 			 */
 			template <typename T>
 			inline
-			double
-			sum_of_absolute_difference (
-				const container<T> &map1,
-				int x1, int y1,
-				const container<T> &map2,
-				int x2, int y2,
-				unsigned int block_size
-			) const {
+			double sum_of_absolute_difference (
+				const container<T> &map1, const int x1, const int y1,
+				const container<T> &map2, const int x2, const int y2,
+				const unsigned int block_size ) const
+			{
 				double sum = 0;
 
 				for (int iy=0; iy<block_size; ++iy) {
@@ -128,15 +125,13 @@ namespace Image
 			 * @return 動きベクトル
 			 */
 			template <typename T>
-			std::pair<int, int>
-			operator() (
+			ve_pair operator() (
 				const container<T> &premap,
 				const container<T> &crtmap,
-				int x,
-				int y,
-				unsigned int macro_block_size,
-				unsigned int search_size
-			) const {
+				const int x, const int y,
+				const unsigned int macro_block_size,
+				const unsigned int search_size ) const
+			{
 				double sad = std::numeric_limits<double>::max();
 				int vex = 0;
 				int vey = 0;
@@ -151,7 +146,7 @@ namespace Image
 						}
 
 						//誤差計算
-						double sum = sum_of_absolute_difference(
+						double sum = sum_of_absolute_difference (
 							crtmap, x, y,
 							premap, x+dx, y+dy,
 							macro_block_size
@@ -185,17 +180,15 @@ namespace Image
 			 * @return 動きベクトル
 			 */
 			template <typename T>
-			std::pair<int, int>
-			operator() (
+			ve_pair operator() (
 				const container<T> &premap,
 				const container<T> &crtmap,
-				int x,
-				int y,
-				unsigned int macro_block_size,
-				unsigned int search_size
-			) const {
+				const int x, const int y,
+				const unsigned int macro_block_size,
+				const unsigned int search_size ) const
+			{
 				//中心点の誤差計算
-				double sad = sum_of_absolute_difference(
+				double sad = sum_of_absolute_difference (
 					crtmap, x, y,
 					premap, x, y,
 					macro_block_size
@@ -219,7 +212,7 @@ namespace Image
 							}
 
 							//誤差計算
-							double sum = sum_of_absolute_difference(
+							double sum = sum_of_absolute_difference (
 								crtmap, x, y,
 								premap, x+px+dx, y+py+dy,
 								macro_block_size
@@ -256,27 +249,25 @@ namespace Image
 			 * @return 動きベクトル
 			 */
 			template <typename T, typename E>
-			std::pair<int, int>
-			operator() (
+			ve_pair operator() (
 				const container<T> &premap,
 				const container<T> &crtmap,
-				int x,
-				int y,
-				unsigned int macro_block_size,
-				unsigned int search_size,
+				const int x, const int y,
+				const unsigned int macro_block_size,
+				const unsigned int search_size,
 				const std::vector<std::pair<E, E>> &ldsp,
-				const std::vector<std::pair<E, E>> &sdsp
-			) const {
+				const std::vector<std::pair<E, E>> &sdsp ) const
+			{
 				int px = 0, py = 0;
 				int vex = 0, vey = 0;
 
-				container<bool> is_searched(
+				container<bool> is_searched (
 					macro_block_size*2+1,
 					macro_block_size*2+1
 				);
 
 				//中心点の誤差計算
-				double sad = sum_of_absolute_difference(
+				double sad = sum_of_absolute_difference (
 					crtmap, x, y,
 					premap, x, y,
 					macro_block_size
@@ -298,7 +289,7 @@ namespace Image
 						}
 
 						//誤差計算
-						double sum = sum_of_absolute_difference(
+						double sum = sum_of_absolute_difference (
 							crtmap, x, y,
 							premap, x+px+dx, y+py+dy,
 							macro_block_size
@@ -349,21 +340,19 @@ namespace Image
 			 * @return 動きベクトル
 			 */
 			template <typename T>
-			std::pair<int, int>
-			operator() (
+			ve_pair operator() (
 				const container<T> &premap,
 				const container<T> &crtmap,
-				int x,
-				int y,
-				unsigned int macro_block_size,
-				unsigned int search_size
-			) const {
-				std::vector<std::pair<int, int>> ldsp = {
+				const int x, const int y,
+				const unsigned int macro_block_size,
+				const unsigned int search_size ) const
+			{
+				std::vector<ve_pair> ldsp = {
 					{-1,-1}, { 0,-1}, { 1,-1},
 					{-1, 0}, { 0, 0}, { 1, 0},
 					{-1, 1}, { 0, 1}, { 1, 1}
 				};
-				std::vector<std::pair<int, int>> sdsp = {};
+				std::vector<ve_pair> sdsp = {};
 
 				return _shape_based_algorithm::operator() (
 					premap, crtmap, x, y,
@@ -388,20 +377,18 @@ namespace Image
 			 * @return 動きベクトル
 			 */
 			template <typename T>
-			std::pair<int, int>
-			operator() (
+			ve_pair operator() (
 				const container<T> &premap,
 				const container<T> &crtmap,
-				int x,
-				int y,
-				unsigned int macro_block_size,
-				unsigned int search_size
-			) const {
-				std::vector<std::pair<int, int>> ldsp = {
+				const int x, const int y,
+				const unsigned int macro_block_size,
+				const unsigned int search_size ) const
+			{
+				std::vector<ve_pair> ldsp = {
 					{-2, 0}, {-1, 1}, { 0, 2}, { 1, 1},
 					{ 2, 0}, { 1,-1}, { 0,-2}, {-1,-1}
 				};
-				std::vector<std::pair<int, int>> sdsp = {
+				std::vector<ve_pair> sdsp = {
 					{-1, 0}, { 0, 1}, { 1, 0}, { 0,-1}
 				};
 
@@ -428,20 +415,18 @@ namespace Image
 			 * @return 動きベクトル
 			 */
 			template <typename T>
-			std::pair<int, int>
-			operator() (
+			ve_pair operator() (
 				const container<T> &premap,
 				const container<T> &crtmap,
-				int x,
-				int y,
-				unsigned int macro_block_size,
-				unsigned int search_size
-			) const {
-				std::vector<std::pair<int, int>> ldsp = {
+				const int x, const int y,
+				const unsigned int macro_block_size,
+				const unsigned int search_size ) const
+			{
+				std::vector<ve_pair> ldsp = {
 					{-2, 0}, {-1, 2}, { 1, 2},
 					{ 2, 0}, { 1,-2}, {-1,-2},
 				};
-				std::vector<std::pair<int, int>> sdsp = {
+				std::vector<ve_pair> sdsp = {
 					{-1, 0}, { 0, 1}, { 1, 0}, { 0,-1}
 				};
 
@@ -457,4 +442,4 @@ namespace Image
 }
 
 #endif
-
+/* vim: set ts=2 sw=2 sts=2 noexpandtab ff=unix ft=cpp fenc=utf-8 : */

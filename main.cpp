@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <cmath>
+#include <map>
 
 #include "image/container.hpp"
 #include "image/io.hpp"
@@ -11,66 +12,70 @@
 #include "image/utils.hpp"
 #include "image/algorithm.hpp"
 
-/**
- * 整数を文字列化
- *
- * @param num 整数
- * @param width 最小文字幅
- * @param fill 文字幅に満たない場合に埋める文字
- * @return 整数の文字列
- */
-const std::string itos (const int num, const int width, const char fill)
-{
-	std::stringstream str;
-	str << std::setw(width) << std::setfill(fill) << num;
-	return str.str();
-}
+#if defined(MODE_FULL)
+	auto func = Image::search::full();
+	std::string mode = "Full Search";
+#elif defined(MODE_TSS)
+	auto func = Image::search::three_step();
+	std::string mode = "Three Step Search";
+#elif defined(MODE_GS)
+	auto func = Image::search::greedy();
+	std::string mode = "Greedy Search";
+#elif defined(MODE_DS)
+	auto func = Image::search::diamond();
+	std::string mode = "Diamond Search";
+#elif defined(MODE_HEX)
+	auto func = Image::search::hexagon();
+	std::string mode = "Hexagon-based Search";
+#else
+	#error 検索アルゴリズムを定義してください
+#endif
 
 /**
  * main関数
  */
-int main(void)
+int main(int argc, char* argv[])
 {
-	//オプションいる？
+	//ターゲットファイル名
+	std::vector<std::string> img_files;
 
-	//設定: 動き保証のパラメータ
-	const int block_size  = 16;
-	const int search_size = 7;
+	//デフォルト設定: 動き保証のパラメータ
+	unsigned int block_size  = 16;
+	unsigned int search_size = 7;
 
-	//設定: 対象画像サイズ
-	const int width  = 352;
-	const int height = 288;
+	//デフォルト設定: 対象画像サイズ
+	unsigned int width  = 352;
+	unsigned int height = 288;
 
-	//設定: 対象画像名
-	const std::string filepath = "../coast/coast";
-	const std::string filesuffix = ".cif";
-	const int headframe = 2;
-	const int skipframe = 3;
-	const int tailframe = 23;
+	//コマンドライン引数の確認
+	if (argc < 3) {
+		std::cout
+			<< "Usage: " << argv[0] << " initial-file other-files..."
+			<< std::endl;
+		return 0;
+	}
 
 	//設定: 出力設定
 	std::cout.precision(6);
 	std::cout.setf(std::ios::fixed, std::ios::floatfield);
 
-	//初期画像ファイル名
-	std::string filename = filepath + itos(headframe, 3, '0') + filesuffix;
-
 	//初期画像の読み込み
-	auto premap = Image::load<float>(filename, width, height);
+	auto premap = Image::load<float>(argv[1], width, height);
 
-	for (int id = headframe + skipframe; id <= tailframe; id += skipframe) {
-		//対象画像ファイル名
-		filename = filepath + itos(id, 3, '0') + filesuffix;
+	//設定の表示
+	std::cout << "Initial file:" << argv[1] << std::endl;
+	std::cout << "File width: " << width << std::endl;
+	std::cout << "File height: " << height << std::endl;
+	std::cout << "Macro block size: " << block_size << std::endl;
+	std::cout << "Search pixel size: " << search_size << std::endl;
+	std::cout << "Algorithm: " << mode << std::endl;
+	std::cout << "-----" << std::endl;
 
+	for (int i=2; i < argc; ++i) {
 		//対象画像の読み込み
-		auto crtmap = Image::load<float>(filename, width, height);
+		auto crtmap = Image::load<float>(argv[i], width, height);
 
 		//動きベクトル予測
-		// auto func = Image::search::full();
-		// auto func = Image::search::three_step();
-		// auto func = Image::search::greedy();
-		// auto func = Image::search::diamond();
-		auto func = Image::search::hexagon();
 		auto vec = Image::motion_vector_search(
 		   premap, crtmap, block_size, search_size, func
 		);
@@ -83,7 +88,7 @@ int main(void)
 		double psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
 
 		//PSNRの出力
-		std::cout << "[" << filename << "] PSNR = " << psnr << std::endl;
+		std::cout << "[" << argv[i] << "] PSNR = " << psnr << std::endl;
 
 		//元画像 ←  対象画像
 		premap = std::move(crtmap);

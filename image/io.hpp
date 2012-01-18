@@ -2,6 +2,7 @@
 #define _IMAGE_IO_
 
 #include <istream>
+#include <ostream>
 #include <fstream>
 #include <string>
 
@@ -71,6 +72,38 @@ namespace Image
 		delete[] buf;
 
 		return ret;
+	}
+
+	/**
+	 * ファイルの書き込み
+	 *
+	 * @param filename 書き込みファイル
+	 * @param image    書き込むデータ
+	 * @return 書き込みの成功
+	 */
+	template <typename T, typename InnerType = unsigned char>
+	bool write (
+		const std::string &filename,
+		const container<T> &image )
+	{
+		//書き込みファイルのオープン
+		std::ofstream out(filename.c_str(), std::ios::binary);
+		if (out.fail()) {
+			throw file_open_exception("Can't open " + filename);
+		}
+
+		//書き込み
+		out << "P5" << std::endl;
+		out << image.width() << " " << image.height() << std::endl;
+		out << "255" << std::endl;
+
+		for (auto it = image.begin(); it != image.end(); ++it) {
+			out << static_cast<char>(*it);
+		}
+		
+		out.close();
+
+		return true;
 	}
 }
 

@@ -61,6 +61,7 @@ int main(int argc, char* argv[])
 
 	//初期画像の読み込み
 	auto premap = Image::load<float>(argv[1], width, height);
+	// Image::write(std::string(argv[1]) + ".pgm", premap);
 
 	//設定の表示
 	std::cout << "Initial file:" << argv[1] << std::endl;
@@ -74,6 +75,7 @@ int main(int argc, char* argv[])
 	for (int i=2; i < argc; ++i) {
 		//対象画像の読み込み
 		auto crtmap = Image::load<float>(argv[i], width, height);
+		// Image::write(std::string(argv[i]) + ".pgm", crtmap);
 
 		//動きベクトル予測
 		double info;

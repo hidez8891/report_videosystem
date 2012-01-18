@@ -76,8 +76,9 @@ int main(int argc, char* argv[])
 		auto crtmap = Image::load<float>(argv[i], width, height);
 
 		//動きベクトル予測
+		double info;
 		auto vec = Image::motion_vector_search(
-		   premap, crtmap, block_size, search_size, func
+		   premap, crtmap, block_size, search_size, func, &info
 		);
 
 		//予測画像の作成
@@ -87,8 +88,9 @@ int main(int argc, char* argv[])
 		double mse = sum(pow(mcmap - crtmap, 2.0)) / (crtmap.width() * crtmap.height());
 		double psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
 
-		//PSNRの出力
-		std::cout << "[" << argv[i] << "] PSNR = " << psnr << std::endl;
+		//PSNRと平均マッチング回数の出力
+		std::cout << "[" << argv[i] << "] PSNR = " << psnr
+		          << " Match = " << info << std::endl;
 
 		//元画像 ←  対象画像
 		premap = std::move(crtmap);

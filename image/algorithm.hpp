@@ -19,6 +19,7 @@ namespace Image
 	 * @param macro_block_size ブロックのサイズ
 	 * @param search_size ブロックの探索範囲
 	 * @param func 検出アルゴリズム
+	 * @param info 平均マッチング回数
 	 * @return マクロブロックの動きベクトルのコンテナ
 	 */
 	template <typename T, typename Function>
@@ -27,11 +28,14 @@ namespace Image
 		const container<T> &crtmap,
 		const unsigned int macro_block_size,
 		const unsigned int search_size,
-		const Function &func )
+		const Function &func,
+		double *info )
 	{
 		ve_container ve (
 			premap.width()  / macro_block_size,
 			premap.height() / macro_block_size );
+
+		double count = 0;
 
 		//探索開始点
 		for (int my=0; my * macro_block_size < premap.height(); ++my) {
@@ -40,10 +44,17 @@ namespace Image
 				double sad = std::numeric_limits<double>::max();
 				int x = mx * macro_block_size;
 				int y = my * macro_block_size;
+				int c;
 
 				//動きベクトル取得
-				ve(mx, my) = func(premap, crtmap, x, y, macro_block_size, search_size);
+				ve(mx, my) = func(premap, crtmap, x, y, macro_block_size, search_size, &c);
+				count += c;
 			}
+		}
+
+		//平均回数の保存
+		if (info != nullptr) {
+			*info = count / ve.width() / ve.height();
 		}
 
 		return ve;
@@ -122,6 +133,7 @@ namespace Image
 			 * @param y マクロブロック左上 y座標
 			 * @param macro_block_size ブロックのサイズ
 			 * @param search_size ブロックの探索範囲
+			 * @param info マッチング回数
 			 * @return 動きベクトル
 			 */
 			template <typename T>
@@ -130,11 +142,13 @@ namespace Image
 				const container<T> &crtmap,
 				const int x, const int y,
 				const unsigned int macro_block_size,
-				const unsigned int search_size ) const
+				const unsigned int search_size,
+				int *info ) const
 			{
 				double sad = std::numeric_limits<double>::max();
 				int vex = 0;
 				int vey = 0;
+				int count = 0;
 
 				// -search_size 〜 search_size の範囲で探索
 				int search = static_cast<int>(search_size);
@@ -144,6 +158,9 @@ namespace Image
 						if (is_over_edge(premap, x+dx, y+dy, macro_block_size)) {
 							continue;
 						}
+
+						//回数カウント
+						++count;
 
 						//誤差計算
 						double sum = sum_of_absolute_difference (
@@ -159,6 +176,11 @@ namespace Image
 							vey = dy;
 						}
 					}
+				}
+
+				//回数の保存
+				if (info != nullptr) {
+					*info = count;
 				}
 
 				return {vex, vey};
@@ -177,6 +199,7 @@ namespace Image
 			 * @param y マクロブロック左上 y座標
 			 * @param macro_block_size ブロックのサイズ
 			 * @param search_size ブロックの探索範囲
+			 * @param info マッチング回数
 			 * @return 動きベクトル
 			 */
 			template <typename T>
@@ -185,7 +208,8 @@ namespace Image
 				const container<T> &crtmap,
 				const int x, const int y,
 				const unsigned int macro_block_size,
-				const unsigned int search_size ) const
+				const unsigned int search_size,
+				int *info ) const
 			{
 				//中心点の誤差計算
 				double sad = sum_of_absolute_difference (
@@ -195,6 +219,7 @@ namespace Image
 				);
 				int vex = 0;
 				int vey = 0;
+				int count = 1;
 
 				// n = 4, 2, 1 で近傍探索
 				for (int n=4; n > 0; n >>= 1) {
@@ -211,6 +236,9 @@ namespace Image
 								continue;
 							}
 
+							//回数のカウント
+							++count;
+
 							//誤差計算
 							double sum = sum_of_absolute_difference (
 								crtmap, x, y,
@@ -226,6 +254,11 @@ namespace Image
 							}
 						}
 					}
+				}
+
+				//回数の保存
+				if (info != nullptr) {
+					*info = count;
 				}
 
 				return {vex, vey};
@@ -246,6 +279,7 @@ namespace Image
 			 * @param search_size ブロックの探索範囲
 			 * @param ldsp 検索範囲テンプレート (広範囲用)
 			 * @param sdsp 検索範囲テンプレート (狭範囲用)
+			 * @param info マッチング回数
 			 * @return 動きベクトル
 			 */
 			template <typename T, typename E>
@@ -256,14 +290,16 @@ namespace Image
 				const unsigned int macro_block_size,
 				const unsigned int search_size,
 				const std::vector<std::pair<E, E>> &ldsp,
-				const std::vector<std::pair<E, E>> &sdsp ) const
+				const std::vector<std::pair<E, E>> &sdsp,
+				int *info ) const
 			{
 				int px = 0, py = 0;
 				int vex = 0, vey = 0;
+				int count = 1;
 
 				container<bool> is_searched (
-					macro_block_size*2+1,
-					macro_block_size*2+1
+					search_size*2+1,
+					search_size*2+1
 				);
 
 				//中心点の誤差計算
@@ -272,7 +308,7 @@ namespace Image
 					premap, x, y,
 					macro_block_size
 				);
-				is_searched(macro_block_size, macro_block_size) = true;
+				is_searched(search_size, search_size) = true;
 
 				//主要処理を関数化
 				auto main_search_func = [&](const std::vector<std::pair<E, E>> &map) {
@@ -283,10 +319,17 @@ namespace Image
 
 						//画像端と処理済みは処理対象外
 						if (is_over_edge(premap, x+px+dx, y+py+dy, macro_block_size)
-							|| is_searched(px+dx+macro_block_size, py+dy+macro_block_size))
+							|| (px+dx+search_size) < 0
+							|| (py+dy+search_size) < 0 
+							|| (px+dx+search_size) > search_size
+							|| (py+dy+search_size) > search_size  
+							|| is_searched(px+dx+search_size, py+dy+search_size))
 						{
 							continue;
 						}
+
+						//回数のカウント
+						++count;
 
 						//誤差計算
 						double sum = sum_of_absolute_difference (
@@ -294,7 +337,7 @@ namespace Image
 							premap, x+px+dx, y+py+dy,
 							macro_block_size
 						);
-						is_searched(px+dx+macro_block_size, py+dy+macro_block_size) = true;
+						is_searched(px+dx+search_size, py+dy+search_size) = true;
 
 						//ベクトル保存
 						if (sad > sum) {
@@ -321,6 +364,11 @@ namespace Image
 				//SDSP上を検索
 				main_search_func(sdsp);
 
+				//回数の保存
+				if (info != nullptr) {
+					*info = count;
+				}
+
 				return {vex, vey};
 			}
 		};
@@ -337,6 +385,7 @@ namespace Image
 			 * @param y マクロブロック左上 y座標
 			 * @param macro_block_size ブロックのサイズ
 			 * @param search_size ブロックの探索範囲
+			 * @param info マッチング回数
 			 * @return 動きベクトル
 			 */
 			template <typename T>
@@ -345,7 +394,8 @@ namespace Image
 				const container<T> &crtmap,
 				const int x, const int y,
 				const unsigned int macro_block_size,
-				const unsigned int search_size ) const
+				const unsigned int search_size,
+				int *info ) const
 			{
 				std::vector<ve_pair> ldsp = {
 					{-1,-1}, { 0,-1}, { 1,-1},
@@ -357,7 +407,7 @@ namespace Image
 				return _shape_based_algorithm::operator() (
 					premap, crtmap, x, y,
 					macro_block_size, search_size,
-					ldsp, sdsp
+					ldsp, sdsp, info
 				);
 			}
 		};
@@ -374,6 +424,7 @@ namespace Image
 			 * @param y マクロブロック左上 y座標
 			 * @param macro_block_size ブロックのサイズ
 			 * @param search_size ブロックの探索範囲
+			 * @param info マッチング回数
 			 * @return 動きベクトル
 			 */
 			template <typename T>
@@ -382,7 +433,8 @@ namespace Image
 				const container<T> &crtmap,
 				const int x, const int y,
 				const unsigned int macro_block_size,
-				const unsigned int search_size ) const
+				const unsigned int search_size,
+				int *info ) const
 			{
 				std::vector<ve_pair> ldsp = {
 					{-2, 0}, {-1, 1}, { 0, 2}, { 1, 1},
@@ -395,7 +447,7 @@ namespace Image
 				return _shape_based_algorithm::operator() (
 					premap, crtmap, x, y,
 					macro_block_size, search_size,
-					ldsp, sdsp
+					ldsp, sdsp, info
 				);
 			}
 		};
@@ -412,6 +464,7 @@ namespace Image
 			 * @param y マクロブロック左上 y座標
 			 * @param macro_block_size ブロックのサイズ
 			 * @param search_size ブロックの探索範囲
+			 * @param info マッチング回数
 			 * @return 動きベクトル
 			 */
 			template <typename T>
@@ -420,11 +473,12 @@ namespace Image
 				const container<T> &crtmap,
 				const int x, const int y,
 				const unsigned int macro_block_size,
-				const unsigned int search_size ) const
+				const unsigned int search_size,
+				int *info ) const
 			{
 				std::vector<ve_pair> ldsp = {
 					{-2, 0}, {-1, 2}, { 1, 2},
-					{ 2, 0}, { 1,-2}, {-1,-2},
+					{ 2, 0}, { 1,-2}, {-1,-2}
 				};
 				std::vector<ve_pair> sdsp = {
 					{-1, 0}, { 0, 1}, { 1, 0}, { 0,-1}
@@ -433,7 +487,7 @@ namespace Image
 				return _shape_based_algorithm::operator() (
 					premap, crtmap, x, y,
 					macro_block_size, search_size,
-					ldsp, sdsp
+					ldsp, sdsp, info
 				);
 			}
 		};

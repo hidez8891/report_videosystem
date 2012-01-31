@@ -295,20 +295,16 @@ namespace Image
 			{
 				int px = 0, py = 0;
 				int vex = 0, vey = 0;
-				int count = 1;
+				int count = 0;
+				int search = static_cast<int>(search_size);
 
 				container<bool> is_searched (
-					search_size*2+1,
-					search_size*2+1
+					search*2+1,
+					search*2+1
 				);
 
 				//中心点の誤差計算
-				double sad = sum_of_absolute_difference (
-					crtmap, x, y,
-					premap, x, y,
-					macro_block_size
-				);
-				is_searched(search_size, search_size) = true;
+				double sad = std::numeric_limits<double>::max();
 
 				//主要処理を関数化
 				auto main_search_func = [&](const std::vector<std::pair<E, E>> &map) {
@@ -319,11 +315,9 @@ namespace Image
 
 						//画像端と処理済みは処理対象外
 						if (is_over_edge(premap, x+px+dx, y+py+dy, macro_block_size)
-							|| (px+dx+search_size) < 0
-							|| (py+dy+search_size) < 0 
-							|| (px+dx+search_size) > search_size
-							|| (py+dy+search_size) > search_size  
-							|| is_searched(px+dx+search_size, py+dy+search_size))
+							|| (px+dx+search) < 0 || (px+dx+search) > 2*search
+							|| (py+dy+search) < 0 || (py+dy+search) > 2*search 
+							|| is_searched(px+dx+search, py+dy+search))
 						{
 							continue;
 						}
@@ -337,7 +331,7 @@ namespace Image
 							premap, x+px+dx, y+py+dy,
 							macro_block_size
 						);
-						is_searched(px+dx+search_size, py+dy+search_size) = true;
+						is_searched(px+dx+search, py+dy+search) = true;
 
 						//ベクトル保存
 						if (sad > sum) {
@@ -437,11 +431,11 @@ namespace Image
 				int *info ) const
 			{
 				std::vector<ve_pair> ldsp = {
-					{-2, 0}, {-1, 1}, { 0, 2}, { 1, 1},
+					{-2, 0}, {-1, 1}, { 0, 2}, { 1, 1}, {0, 0},
 					{ 2, 0}, { 1,-1}, { 0,-2}, {-1,-1}
 				};
 				std::vector<ve_pair> sdsp = {
-					{-1, 0}, { 0, 1}, { 1, 0}, { 0,-1}
+					{-1, 0}, { 0, 1}, { 1, 0}, { 0,-1}, {0, 0}
 				};
 
 				return _shape_based_algorithm::operator() (
@@ -477,11 +471,11 @@ namespace Image
 				int *info ) const
 			{
 				std::vector<ve_pair> ldsp = {
-					{-2, 0}, {-1, 2}, { 1, 2},
+					{-2, 0}, {-1, 2}, { 1, 2}, {0, 0},
 					{ 2, 0}, { 1,-2}, {-1,-2}
 				};
 				std::vector<ve_pair> sdsp = {
-					{-1, 0}, { 0, 1}, { 1, 0}, { 0,-1}
+					{-1, 0}, { 0, 1}, { 1, 0}, { 0,-1}, {0, 0}
 				};
 
 				return _shape_based_algorithm::operator() (
